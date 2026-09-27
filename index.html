@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HelpBook — School-Friendly Learning Assistant</title>
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --text:#20242c; --muted:#697386;
+  --line:#e5e7eb; --accent:#4f46e5; --accent2:#eef2ff; --danger:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:250px;background:#fff;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:14px}
+.logo{font-size:23px;font-weight:800;padding:6px 10px}.logo span{color:var(--accent)}
+.tag{font-size:12px;color:var(--muted);padding:0 10px 8px}
+.nav button,.newchat{width:100%;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:10px;font-size:14px;cursor:pointer;color:var(--text)}
+.nav button:hover,.nav button.active{background:var(--accent2);color:var(--accent)}
+.newchat{background:var(--accent);color:white;text-align:center;font-weight:700;margin-bottom:4px}
+.recent{margin-top:8px;overflow:auto}.recent h4{font-size:11px;text-transform:uppercase;color:var(--muted);padding:0 10px}
+.recent button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-bottom{margin-top:auto;font-size:12px;color:var(--muted);padding:10px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.topbar strong{font-size:16px}.badge{font-size:12px;background:#ecfdf5;color:#047857;padding:6px 9px;border-radius:999px}
+.content{flex:1;overflow:auto}
+.view{display:none;min-height:100%;padding:36px 24px}.view.active{display:block}
+.chat-wrap{max-width:900px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.hero{text-align:center;margin:50px 0 28px}.hero h1{font-size:38px;margin:0 0 10px}.hero p{color:var(--muted);margin:0}
+.suggestions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}
+.suggestion{border:1px solid var(--line);background:#fff;padding:14px;border-radius:12px;cursor:pointer;text-align:left}
+.suggestion b{display:block;margin-bottom:5px}.suggestion small{color:var(--muted)}
+.messages{flex:1;padding-bottom:20px}
+.msg{display:flex;margin:16px 0;gap:10px}.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;background:#e5e7eb}
+.msg.assistant .avatar{background:var(--accent);color:white}.bubble{max-width:760px;background:#fff;border:1px solid var(--line);padding:13px 15px;border-radius:14px;line-height:1.55;white-space:pre-wrap}.msg.user{justify-content:flex-end}.msg.user .avatar{order:2;background:#111827;color:white}.msg.user .bubble{background:#111827;color:white;border-color:#111827}
+.composer{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 22%);padding:18px 0 22px}
+.composer-box{background:#fff;border:1px solid #d9dce4;border-radius:16px;padding:10px;box-shadow:0 8px 24px #0000000a}
+textarea{width:100%;border:0;resize:none;outline:0;font:inherit;min-height:58px;padding:5px}
+.compose-row{display:flex;justify-content:space-between;align-items:center}.mode{display:flex;gap:7px;flex-wrap:wrap}.mode button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 10px;cursor:pointer;font-size:12px}.mode button.selected{background:var(--accent2);border-color:#c7d2fe;color:var(--accent);font-weight:700}.send{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 15px;font-weight:700;cursor:pointer}
+.section-head{max-width:1000px;margin:0 auto 22px}.section-head h2{margin:0 0 5px}.section-head p{margin:0;color:var(--muted)}
+.grid{max-width:1000px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}.card h3{margin:0 0 7px}.card p{color:var(--muted);font-size:14px}.card button{border:0;background:var(--accent2);color:var(--accent);padding:8px 10px;border-radius:8px;cursor:pointer}
+.empty{text-align:center;color:var(--muted);padding:50px}
+.modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-card{background:#fff;border-radius:16px;padding:22px;width:min(480px,100%)}.modal-card input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:12px 0}.modal-actions{display:flex;justify-content:flex-end;gap:8px}.secondary{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:9px;cursor:pointer}.primary{border:0;background:var(--accent);color:#fff;padding:9px 13px;border-radius:9px;cursor:pointer}
+.notice{max-width:1000px;margin:0 auto 18px;background:#fffbeb;border:1px solid #fde68a;padding:12px 14px;border-radius:12px;font-size:13px;color:#854d0e}
+@media(max-width:800px){.sidebar{width:205px}.suggestions{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.sidebar{display:none}.topbar{padding:0 15px}.view{padding:24px 14px}.hero h1{font-size:30px}.suggestions{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div><div class="logo">Help<span>Book</span></div><div class="tag">Your school-friendly learning assistant.</div></div>
+    <button class="newchat" onclick="newChat()">＋ New Chat</button>
+    <div class="nav">
+      <button class="active" data-view="chat" onclick="showView('chat')">💬 Homework Help</button>
+      <button data-view="recent" onclick="showView('recent')">🕘 Recent</button>
+      <button data-view="projects" onclick="showView('projects')">📁 Projects</button>
+    </div>
+    <div class="recent"><h4>Recent chats</h4><div id="sideRecent"></div></div>
+    <div class="sidebar-bottom">Designed for learning. Follow your school's acceptable-use rules.</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar"><strong id="pageTitle">Homework Help</strong><span class="badge">● School-friendly</span></header>
+    <div class="content">
+      <section id="chat" class="view active">
+        <div class="chat-wrap">
+          <div id="hero" class="hero">
+            <h1>What do you need help with?</h1>
+            <p>Ask a question and learn how to solve it step by step.</p>
+            <div class="suggestions">
+              <button class="suggestion" onclick="fill('Solve 3x + 7 = 22 step by step.')"><b>📐 Maths</b><small>Work through a problem</small></button>
+              <button class="suggestion" onclick="fill('Explain photosynthesis in simple words.')"><b>🔬 Science</b><small>Understand a topic</small></button>
+              <button class="suggestion" onclick="fill('Help me plan an English essay about a character.')"><b>📚 English</b><small>Plan and improve work</small></button>
+              <button class="suggestion" onclick="fill('Quiz me on earthquakes.')"><b>🌍 Geography</b><small>Test your knowledge</small></button>
+            </div>
+          </div>
+          <div id="messages" class="messages"></div>
+          <div class="composer">
+            <div class="composer-box">
+              <textarea id="input" placeholder="Ask a homework question..." onkeydown="handleKey(event)"></textarea>
+              <div class="compose-row">
+                <div class="mode" id="modes">
+                  <button class="selected" onclick="setMode(this,'Explain')">Explain</button>
+                  <button onclick="setMode(this,'Solve')">Solve</button>
+                  <button onclick="setMode(this,'Study')">Study</button>
+                  <button onclick="setMode(this,'Quiz Me')">Quiz Me</button>
+                  <button onclick="setMode(this,'Check My Work')">Check My Work</button>
+                </div>
+                <button class="send" onclick="sendMessage()">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="recent" class="view">
+        <div class="section-head"><h2>Recent conversations</h2><p>Open a previous chat and continue learning.</p></div>
+        <div id="recentGrid" class="grid"></div>
+      </section>
+
+      <section id="projects" class="view">
+        <div class="section-head"><h2>Projects</h2><p>Organise notes and useful conversations by subject.</p></div>
+        <div style="max-width:1000px;margin:0 auto 16px"><button class="primary" onclick="openProjectModal()">＋ New Project</button></div>
+        <div id="projectGrid" class="grid"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div id="modal" class="modal">
+  <div class="modal-card"><h3>Create a project</h3><input id="projectName" placeholder="e.g. Science Project"><div class="modal-actions"><button class="secondary" onclick="closeModal()">Cancel</button><button class="primary" onclick="createProject()">Create</button></div></div>
+</div>
+
+<script>
+const KEY='helpbook-data-v1';
+let data=JSON.parse(localStorage.getItem(KEY)||'{"chats":[],"projects":[]}');
+let currentChat=null, mode='Explain';
+
+function save(){localStorage.setItem(KEY,JSON.stringify(data));renderSide();renderRecent();renderProjects();}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+  document.getElementById('pageTitle').textContent=id==='chat'?'Homework Help':id[0].toUpperCase()+id.slice(1);
+}
+function newChat(){
+  currentChat={id:uid(),title:'New conversation',messages:[]};
+  document.getElementById('messages').innerHTML='';
+  document.getElementById('hero').style.display='block';
+  document.getElementById('input').value='';
+  showView('chat');
+}
+function fill(t){document.getElementById('input').value=t;document.getElementById('input').focus()}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
+function setMode(btn,m){document.querySelectorAll('#modes button').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');mode=m}
+function addMsg(who,text){
+  const wrap=document.createElement('div');wrap.className='msg '+who;
+  const av=document.createElement('div');av.className='avatar';av.textContent=who==='user'?'You':'HB';
+  const b=document.createElement('div');b.className='bubble';b.textContent=text;
+  wrap.append(av,b);document.getElementById('messages').appendChild(wrap);
+  document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;
+}
+function answer(q){
+  const l=q.toLowerCase();
+  if(mode==='Quiz Me') return `Let's practise ${q.replace(/^quiz me on /i,'')}\n\n1. What is the main idea of this topic?\n2. Name one important fact.\n3. Explain why it matters.\n\nAnswer the questions first, then ask me to check your answers.`;
+  if(mode==='Check My Work') return `I can help you check it. Compare your work with these questions:\n\n• Did you show your method?\n• Did you use the correct formula or evidence?\n• Did you explain why your answer makes sense?\n\nPaste your work and I can point out areas to improve without simply rewriting it for you.`;
+  if(mode==='Solve' && /x|equation|calculate|area|volume|angle|fraction|percent|%/.test(l))
+    return `Let's work through it step by step.\n\n1. Identify what the question gives you.\n2. Choose the correct rule or formula.\n3. Substitute the known values.\n4. Calculate carefully.\n5. Check whether the answer makes sense.\n\nFor a full worked solution, send the exact question (and any diagram or measurements).`;
+  if(mode==='Study') return `Study plan for this topic:\n\n• Start by writing what you already know.\n• Learn 3–5 key facts or definitions.\n• Try a practice question without notes.\n• Check your answer and correct mistakes.\n• Explain the topic in your own words.\n\nTopic: ${q}`;
+  if(/hello|hi|hey/.test(l)) return `Hi! I'm HelpBook. Tell me what subject or homework question you're working on, and I'll help you understand it step by step.`;
+  return `Here's a simple way to approach this:\n\n• Break the question into smaller parts.\n• Identify the key facts or instructions.\n• Work through one step at a time.\n• Explain the reason for each step.\n• Check your final answer.\n\nYou asked: ${q}\n\nIf you paste the exact question, I can give more specific learning help.`;
+}
+function sendMessage(){
+  const input=document.getElementById('input'), q=input.value.trim(); if(!q)return;
+  if(!currentChat) currentChat={id:uid(),title:q.slice(0,42),messages:[]};
+  if(currentChat.title==='New conversation') currentChat.title=q.slice(0,42);
+  document.getElementById('hero').style.display='none';
+  currentChat.messages.push({who:'user',text:q});
+  addMsg('user',q); input.value='';
+  const a=answer(q); currentChat.messages.push({who:'assistant',text:a}); addMsg('assistant',a);
+  data.chats=data.chats.filter(c=>c.id!==currentChat.id); data.chats.unshift(currentChat); data.chats=data.chats.slice(0,30); save();
+}
+function loadChat(id){
+  const c=data.chats.find(x=>x.id===id); if(!c)return; currentChat=c; showView('chat');
+  document.getElementById('hero').style.display='none';document.getElementById('messages').innerHTML='';
+  c.messages.forEach(m=>addMsg(m.who,m.text));
+}
+function renderSide(){
+  document.getElementById('sideRecent').innerHTML=data.chats.slice(0,6).map(c=>`<button onclick="loadChat('${c.id}')">${escapeHtml(c.title)}</button>`).join('')||'<div style="padding:8px 10px;font-size:12px;color:#9ca3af">No chats yet</div>';
+}
+function renderRecent(){
+  const el=document.getElementById('recentGrid');
+  el.innerHTML=data.chats.map(c=>`<div class="card"><h3>${escapeHtml(c.title)}</h3><p>${c.messages.length} messages</p><button onclick="loadChat('${c.id}')">Open conversation</button></div>`).join('')||'<div class="empty">No recent conversations yet.</div>';
+}
+function openProjectModal(){document.getElementById('modal').classList.add('show');document.getElementById('projectName').focus()}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function createProject(){
+  const n=document.getElementById('projectName').value.trim();if(!n)return;
+  data.projects.push({id:uid(),name:n,notes:[]});document.getElementById('projectName').value='';closeModal();save();
+}
+function renderProjects(){
+  const el=document.getElementById('projectGrid');
+  el.innerHTML=data.projects.map(p=>`<div class="card"><h3>📁 ${escapeHtml(p.name)}</h3><p>${p.notes.length} saved item(s)</p><button onclick="alert('Project space ready for: '+${JSON.stringify(p.name)})">Open project</button></div>`).join('')||'<div class="empty">Create your first project to organise your schoolwork.</div>';
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+renderSide();renderRecent();renderProjects();
+</script>
+</body>
+</html>
